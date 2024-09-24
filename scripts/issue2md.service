@@ -1,0 +1,21 @@
+[Unit]
+Description=Github issue to markdown
+ConditionFileIsExecutable=/root/go/src/github.com/bigwhite/issue2md/issue2mdweb
+                                                                            
+After=syslog.target network.target
+
+[Service]
+StartLimitInterval=5
+StartLimitBurst=10
+ExecStart=/root/go/src/github.com/bigwhite/issue2md/issue2mdweb -ip 127.0.0.1 -port 9002
+
+WorkingDirectory=/root/go/src/github.com/bigwhite/issue2md
+
+Restart=always
+RestartSec=120
+LimitNOFILE=1048576
+LimitNPROC=512
+
+[Install]
+WantedBy=multi-user.target
+
