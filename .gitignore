@@ -28,4 +28,4 @@ go.work.sum
 *.swp
 *.swo
 *.swa
-./issue2md
+issue2md

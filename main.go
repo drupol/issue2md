@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -141,19 +140,32 @@ func issueToMarkdown(issue *Issue, comments []Comment) string {
 	return sb.String()
 }
 
-func main() {
-	// Parse command-line arguments
-	issueURL := flag.String("issue-url", "", "The GitHub issue URL")
-	flag.Parse()
+func usage() {
+	fmt.Println("Usage: issue2md issue-url [markdown-file]")
+	fmt.Println("Arguments:")
+	fmt.Println("  issue-url      The URL of the github issue to convert.")
+	fmt.Println("  markdown-file  (optional) The output markdown file.")
+}
 
-	if *issueURL == "" {
-		fmt.Println("Error: issue URL is required")
-		flag.Usage()
+func main() {
+	var issueURL, markdownFile string
+
+	// Parse cmdline to get issue url
+	if len(os.Args) < 2 {
+		fmt.Println("Error: issue-url is required.")
+		usage()
 		return
 	}
 
+	issueURL = os.Args[1]
+
+	// Parse cmdline to get markdownFile
+	if len(os.Args) >= 2 {
+		markdownFile = os.Args[2]
+	}
+
 	// Parse the issue URL to get owner, repo, and issue number
-	owner, repo, issueNumber, err := parseIssueURL(*issueURL)
+	owner, repo, issueNumber, err := parseIssueURL(issueURL)
 	if err != nil {
 		fmt.Printf("Error parsing issue URL: %v\n", err)
 		return
@@ -179,7 +191,13 @@ func main() {
 	markdown := issueToMarkdown(issue, comments)
 
 	// Save to file
-	fileName := fmt.Sprintf("issue_%d.md", issue.Number)
+	var fileName string
+	if markdownFile != "" {
+		fileName = markdownFile
+	} else {
+		fileName = fmt.Sprintf("%s_%s_issue_%d.md", owner, repo, issue.Number)
+	}
+
 	file, err := os.Create(fileName)
 	if err != nil {
 		fmt.Printf("Error creating file: %v\n", err)
