@@ -1,39 +1,41 @@
 # issue2md
 
-A cli and web tool to convert GitHub issue into Markdown.
+A CLI and web tool to convert GitHub issues into Markdown format.
 
-## Command-line mode
+[中文文档](./README-zh.md)
 
-### Install issue2md cli
+## Command-line Mode
 
+### Install issue2md CLI
+
+```bash
+$ go install github.com/bigwhite/issue2md/cmd/issue2md@latest
 ```
-$go install github.com/bigwhite/issue2md/cmd/issue2md@latest
-```
 
-### Convert issue to markdown
+### Convert an Issue to Markdown
 
-```
+```bash
 Usage: issue2md issue-url [markdown-file]
 Arguments:
-  issue-url      The URL of the github issue to convert.
+  issue-url      The URL of the GitHub issue to convert.
   markdown-file  (optional) The output markdown file.
 ```
 
-## Web mode
+## Web Mode
 
-### Install and run issue2md web
+### Install and Run issue2md Web
 
-```
-$git clone https://github.com/bigwhite/issue2md.git
-$make web
-$./issue2mdweb   
+```bash
+$ git clone https://github.com/bigwhite/issue2md.git
+$ make web
+$ ./issue2mdweb
 Server is running on http://0.0.0.0:8080
 ```
 
-### Convert issue to markdown
+### Convert an Issue to Markdown
 
-Open localhost:8080 with the browser: 
+Open `localhost:8080` in your browser:
 
-![](./screen-snapshot.png)
+![Screenshot](./screen-snapshot.png)
 
-Input the issue url you want to convert and click "Convert" button!
+Input the issue URL you wish to convert and click the "Convert" button!
