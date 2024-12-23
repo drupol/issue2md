@@ -8,5 +8,9 @@ cmdline:
 web:
 	go build -o issue2mdweb 
 
+buildimage:
+	docker build -t bigwhite/issue2mdweb .
+
+
 clean:
 	rm -fr issue2md issue2mdweb
