@@ -11,6 +11,8 @@ web:
 buildimage:
 	docker build -t bigwhite/issue2mdweb .
 
+push:
+	docker push bigwhite/issue2mdweb:latest
 
 clean:
 	rm -fr issue2md issue2mdweb
