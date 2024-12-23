@@ -23,7 +23,15 @@ $ go install github.com/bigwhite/issue2md/cmd/issue2md@latest
 
 ## 网页模式
 
-### 安装并运行 issue2md web
+### 安装并运行issue2md web
+
+#### 基于Docker镜像运行(推荐)
+
+```                              
+$docker run -d -p 8080:8080 bigwhite/issue2mdweb
+```        
+
+#### 从源码构建安装
 
 ```
 $ git clone https://github.com/bigwhite/issue2md.git

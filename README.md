@@ -27,6 +27,14 @@ Arguments:
 
 ### Install and Run issue2md Web
 
+#### Run issue2md web with docker(Recommended)
+
+```
+$docker run -d -p 8080:8080 bigwhite/issue2mdweb
+```
+
+#### Compile from source
+
 ```bash
 $ git clone https://github.com/bigwhite/issue2md.git
 $ make web
