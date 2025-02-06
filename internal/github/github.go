@@ -173,8 +173,8 @@ func FetchDiscussionComments(owner, repo string, discussionNumber int, token str
 	if token != "" {
 		req.Header.Set("Authorization", "token "+token)
 	}
-	req.Header.Set("Accept", "application/vnd.github+json") // Important for Discussions API
-	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")    // Specify API version
+	req.Header.Set("Accept", "application/vnd.github+json")
+	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -186,14 +186,12 @@ func FetchDiscussionComments(owner, repo string, discussionNumber int, token str
 		return nil, fmt.Errorf("GitHub API returned status: %s", resp.Status)
 	}
 
-	var discussionCommentsResp struct { // Define a struct to match the expected response format
-		Items []DiscussionComment `json:"items"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&discussionCommentsResp); err != nil {
+	var discussionComments []DiscussionComment // 直接解码为 DiscussionComment 的 slice
+	if err := json.NewDecoder(resp.Body).Decode(&discussionComments); err != nil {
 		return nil, err
 	}
 
-	return discussionCommentsResp.Items, nil // Return the Items slice which contains the comments
+	return discussionComments, nil // 直接返回解码后的 slice
 }
 
 type DiscussionComment struct {
