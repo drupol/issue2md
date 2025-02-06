@@ -18,6 +18,15 @@ type Issue struct {
 	User     User   `json:"user"`
 }
 
+type Discussion struct {
+	Title    string `json:"title"`
+	Body     string `json:"body"`
+	Number   int    `json:"number"`
+	URL      string `json:"html_url"` // Use html_url for discussions
+	Comments int    `json:"comments_count"`
+	User     User   `json:"user"`
+}
+
 type Comment struct {
 	Body string `json:"body"`
 	User User   `json:"user"`
@@ -27,25 +36,34 @@ type User struct {
 	Login string `json:"login"`
 }
 
-func ParseIssueURL(issueURL string) (owner, repo string, issueNumber int, err error) {
+func ParseURL(issueURL string) (owner, repo string, number int, issueType string, err error) {
 	parsedURL, err := url.Parse(issueURL)
 	if err != nil {
-		return "", "", 0, fmt.Errorf("invalid URL: %w", err)
+		return
 	}
 
 	parts := strings.Split(strings.Trim(parsedURL.Path, "/"), "/")
-	if len(parts) != 4 || parts[2] != "issues" {
-		return "", "", 0, fmt.Errorf("invalid GitHub issue URL format")
+	if len(parts) < 4 {
+		err = fmt.Errorf("invalid GitHub URL format")
+		return
 	}
 
+	if parts[2] == "issues" && len(parts) == 4 {
+		issueType = "issue"
+	} else if parts[2] == "discussions" && len(parts) == 4 {
+		issueType = "discussion"
+	} else {
+		err = fmt.Errorf("invalid GitHub issue or discussion URL format")
+		return
+	}
 	owner = parts[0]
 	repo = parts[1]
-	issueNumber, err = strconv.Atoi(parts[3])
+	issueNumber, err := strconv.Atoi(parts[3])
 	if err != nil {
-		return "", "", 0, fmt.Errorf("invalid issue number: %w", err)
+		return
 	}
 
-	return owner, repo, issueNumber, nil
+	return owner, repo, issueNumber, issueType, nil
 }
 
 func FetchIssue(owner, repo string, issueNumber int, token string) (*Issue, error) {
@@ -108,4 +126,77 @@ func FetchComments(owner, repo string, issueNumber int, token string) ([]Comment
 	}
 
 	return comments, nil
+}
+
+func FetchDiscussion(owner, repo string, discussionNumber int, token string) (*Discussion, error) {
+	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/discussions/%d", owner, repo, discussionNumber)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if token != "" {
+		req.Header.Set("Authorization", "token "+token)
+	}
+	req.Header.Set("Accept", "application/vnd.github+json") // Important for Discussions API
+	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")    // Specify API version
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("GitHub API returned status: %s", resp.Status)
+	}
+
+	var discussion Discussion
+	if err := json.NewDecoder(resp.Body).Decode(&discussion); err != nil {
+		return nil, err
+	}
+
+	return &discussion, nil
+}
+
+func FetchDiscussionComments(owner, repo string, discussionNumber int, token string) ([]DiscussionComment, error) {
+	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/discussions/%d/comments", owner, repo, discussionNumber)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if token != "" {
+		req.Header.Set("Authorization", "token "+token)
+	}
+	req.Header.Set("Accept", "application/vnd.github+json") // Important for Discussions API
+	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")    // Specify API version
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("GitHub API returned status: %s", resp.Status)
+	}
+
+	var discussionCommentsResp struct { // Define a struct to match the expected response format
+		Items []DiscussionComment `json:"items"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&discussionCommentsResp); err != nil {
+		return nil, err
+	}
+
+	return discussionCommentsResp.Items, nil // Return the Items slice which contains the comments
+}
+
+type DiscussionComment struct {
+	Body string `json:"body"`
+	User User   `json:"user"`
 }

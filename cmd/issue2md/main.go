@@ -29,7 +29,7 @@ func main() {
 		markdownFile = os.Args[2]
 	}
 
-	owner, repo, issueNumber, err := github.ParseIssueURL(issueURL)
+	owner, repo, issueNumber, issueType, err := github.ParseURL(issueURL)
 	if err != nil {
 		fmt.Printf("Error parsing issue URL: %v\n", err)
 		return
@@ -37,22 +37,43 @@ func main() {
 
 	token := os.Getenv("GITHUB_TOKEN")
 
-	issue, err := github.FetchIssue(owner, repo, issueNumber, token)
-	if err != nil {
-		fmt.Printf("Error fetching issue: %v\n", err)
+	var markdown string
+	switch issueType {
+	case "issue":
+		issue, err := github.FetchIssue(owner, repo, issueNumber, token)
+		if err != nil {
+			fmt.Printf("Error fetching issue: %v\n", err)
+			return
+		}
+
+		comments, err := github.FetchComments(owner, repo, issueNumber, token)
+		if err != nil {
+			fmt.Printf("Error fetching comments: %v\n", err)
+			return
+		}
+		markdown = converter.IssueToMarkdown(issue, comments)
+
+	case "discussion":
+		discussion, err := github.FetchDiscussion(owner, repo, issueNumber, token)
+		if err != nil {
+			fmt.Printf("Error fetching discussion: %v\n", err)
+			return
+		}
+
+		discussionComments, err := github.FetchDiscussionComments(owner, repo, issueNumber, token)
+		if err != nil {
+			fmt.Printf("Error fetching discussion comments: %v\n", err)
+			return
+		}
+		markdown = converter.DiscussionToMarkdown(discussion, discussionComments)
+
+	default:
+		fmt.Printf("Unsupported URL type: %s\n", issueType)
 		return
 	}
-
-	comments, err := github.FetchComments(owner, repo, issueNumber, token)
-	if err != nil {
-		fmt.Printf("Error fetching comments: %v\n", err)
-		return
-	}
-
-	markdown := converter.IssueToMarkdown(issue, comments)
 
 	if markdownFile == "" {
-		markdownFile = fmt.Sprintf("%s_%s_issue_%d.md", owner, repo, issue.Number)
+		markdownFile = fmt.Sprintf("%s_%s_%s_%d.md", owner, repo, issueType, issueNumber)
 	}
 
 	file, err := os.Create(markdownFile)
