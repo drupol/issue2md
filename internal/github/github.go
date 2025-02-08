@@ -162,7 +162,7 @@ func FetchDiscussion(owner, repo string, discussionNumber int, token string) (*D
 }
 
 func FetchDiscussionComments(owner, repo string, discussionNumber int, token string) ([]DiscussionComment, error) {
-	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/discussions/%d/comments", owner, repo, discussionNumber)
+	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/discussions/%d/comments?state=all", owner, repo, discussionNumber) // 添加 state=all 参数
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
@@ -186,12 +186,12 @@ func FetchDiscussionComments(owner, repo string, discussionNumber int, token str
 		return nil, fmt.Errorf("GitHub API returned status: %s", resp.Status)
 	}
 
-	var discussionComments []DiscussionComment // 直接解码为 DiscussionComment 的 slice
+	var discussionComments []DiscussionComment
 	if err := json.NewDecoder(resp.Body).Decode(&discussionComments); err != nil {
 		return nil, err
 	}
 
-	return discussionComments, nil // 直接返回解码后的 slice
+	return discussionComments, nil
 }
 
 type DiscussionComment struct {
