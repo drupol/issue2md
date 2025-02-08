@@ -191,7 +191,7 @@ func FetchDiscussionComments(owner, repo string, discussionNumber int, token str
 		}
 
 		var currentComments []DiscussionComment
-		if err := json.NewDecoder(resp.Body).Decode(currentComments); err != nil {
+		if err := json.NewDecoder(resp.Body).Decode(&currentComments); err != nil {
 			return nil, err
 		}
 		allComments = append(allComments, currentComments...) // Append current page comments
