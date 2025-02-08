@@ -98,34 +98,60 @@ func FetchIssue(owner, repo string, issueNumber int, token string) (*Issue, erro
 }
 
 func FetchComments(owner, repo string, issueNumber int, token string) ([]Comment, error) {
-	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/issues/%d/comments", owner, repo, issueNumber)
+	baseURL := fmt.Sprintf("https://api.github.com/repos/%s/%s/issues/%d/comments", owner, repo, issueNumber)
+	var allComments []Comment
 
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
+	nextURL := baseURL // Initial URL
+
+	for nextURL != "" {
+		req, err := http.NewRequest("GET", nextURL, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		if token != "" {
+			req.Header.Set("Authorization", "token "+token)
+		}
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("GitHub API returned status: %s", resp.Status)
+		}
+
+		var currentComments []Comment
+		if err := json.NewDecoder(resp.Body).Decode(&currentComments); err != nil {
+			return nil, err
+		}
+		allComments = append(allComments, currentComments...) // Append current page comments
+
+		nextURL = "" // Reset nextURL, will be updated from Link header if exists
+		linkHeader := resp.Header.Get("Link")
+		if linkHeader != "" {
+			// Parse Link header to find "next" page URL
+			for _, link := range strings.Split(linkHeader, ",") {
+				link = strings.TrimSpace(link)
+				parts := strings.Split(link, ";")
+				if len(parts) != 2 {
+					continue
+				}
+				urlPart := strings.Trim(parts[0], "<>")
+				relPart := strings.TrimSpace(parts[1])
+				if relPart == `rel="next"` {
+					nextURL = urlPart
+					break // Found "next", no need to check other links
+				}
+			}
+		}
+		// If nextURL is still "", it means no "next" page, so exit loop
 	}
 
-	if token != "" {
-		req.Header.Set("Authorization", "token "+token)
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("GitHub API returned status: %s", resp.Status)
-	}
-
-	var comments []Comment
-	if err := json.NewDecoder(resp.Body).Decode(&comments); err != nil {
-		return nil, err
-	}
-
-	return comments, nil
+	return allComments, nil
 }
 
 func FetchDiscussion(owner, repo string, discussionNumber int, token string) (*Discussion, error) {
