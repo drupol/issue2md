@@ -35,6 +35,8 @@ func ConvertHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	enableReactions := r.FormValue("enable_reactions") == "true"
+
 	owner, repo, issueNumber, issueType, err := github.ParseURL(issueURL)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error parsing issue URL: %v", err), http.StatusBadRequest)
@@ -54,7 +56,7 @@ func ConvertHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		comments, err := github.FetchComments(owner, repo, issueNumber, token)
+		comments, err := github.FetchComments(owner, repo, issueNumber, token, enableReactions)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error fetching comments: %v", err), http.StatusInternalServerError)
 			return
@@ -67,7 +69,7 @@ func ConvertHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, fmt.Sprintf("Error fetching discussion: %v", err), http.StatusInternalServerError)
 			return
 		}
-		discussionComments, err := github.FetchDiscussionComments(owner, repo, issueNumber, token)
+		discussionComments, err := github.FetchDiscussionComments(owner, repo, issueNumber, token, enableReactions)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error fetching discussion comments: %v", err), http.StatusInternalServerError)
 			return
