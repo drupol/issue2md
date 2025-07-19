@@ -36,6 +36,7 @@ func ConvertHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	enableReactions := r.FormValue("enable_reactions") == "true"
+	enableUserLinks := r.FormValue("enable_user_links") == "true"
 
 	owner, repo, issueNumber, issueType, err := github.ParseURL(issueURL)
 	if err != nil {
@@ -56,12 +57,12 @@ func ConvertHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		comments, err := github.FetchComments(owner, repo, issueNumber, token, enableReactions)
+		comments, err := github.FetchComments(owner, repo, issueNumber, token, enableReactions, enableUserLinks)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error fetching comments: %v", err), http.StatusInternalServerError)
 			return
 		}
-		markdown = converter.IssueToMarkdown(issue, comments)
+		markdown = converter.IssueToMarkdown(issue, comments, enableUserLinks)
 		filename = fmt.Sprintf("%s_%s_issue_%d.md", owner, repo, issue.Number)
 	case "discussion":
 		discussion, err := github.FetchDiscussion(owner, repo, issueNumber, token)
@@ -74,7 +75,7 @@ func ConvertHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, fmt.Sprintf("Error fetching discussion comments: %v", err), http.StatusInternalServerError)
 			return
 		}
-		markdown = converter.DiscussionToMarkdown(discussion, discussionComments)
+		markdown = converter.DiscussionToMarkdown(discussion, discussionComments, enableUserLinks)
 		filename = fmt.Sprintf("%s_%s_discussion_%d.md", owner, repo, discussion.Number)
 	default:
 		http.Error(w, fmt.Sprintf("Unsupported URL type: %s", issueType), http.StatusBadRequest)

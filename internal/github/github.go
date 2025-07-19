@@ -112,7 +112,7 @@ func FetchIssue(owner, repo string, issueNumber int, token string) (*Issue, erro
 	return &issue, nil
 }
 
-func FetchComments(owner, repo string, issueNumber int, token string, enableReactions bool) ([]Comment, error) {
+func FetchComments(owner, repo string, issueNumber int, token string, enableReactions bool, enableUserLinks bool) ([]Comment, error) {
 	baseURL := fmt.Sprintf("https://api.github.com/repos/%s/%s/issues/%d/comments", owner, repo, issueNumber)
 	var allComments []Comment
 

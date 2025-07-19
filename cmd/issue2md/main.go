@@ -11,6 +11,7 @@ import (
 )
 
 var enableReactions = flag.Bool("enable-reactions", false, "Include reactions in the output.")
+var enableUserLinks = flag.Bool("enable-user-links", false, "Enable user profile links in the output.")
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage: issue2md [flags] issue-url [markdown-file]\n")
@@ -55,12 +56,12 @@ func main() {
 			return
 		}
 
-		comments, err := github.FetchComments(owner, repo, issueNumber, token, *enableReactions)
+		comments, err := github.FetchComments(owner, repo, issueNumber, token, *enableReactions, *enableUserLinks)
 		if err != nil {
 			fmt.Printf("Error fetching comments: %v\n", err)
 			return
 		}
-		markdown = converter.IssueToMarkdown(issue, comments)
+		markdown = converter.IssueToMarkdown(issue, comments, *enableUserLinks)
 
 	case "discussion":
 		discussion, err := github.FetchDiscussion(owner, repo, issueNumber, token)
@@ -74,7 +75,7 @@ func main() {
 			fmt.Printf("Error fetching discussion comments: %v\n", err)
 			return
 		}
-		markdown = converter.DiscussionToMarkdown(discussion, discussionComments)
+		markdown = converter.DiscussionToMarkdown(discussion, discussionComments, *enableUserLinks)
 
 	default:
 		fmt.Printf("Unsupported URL type: %s\n", issueType)
