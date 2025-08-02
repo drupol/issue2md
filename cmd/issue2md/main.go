@@ -10,23 +10,36 @@ import (
 )
 
 func usage() {
-	fmt.Println("Usage: issue2md issue-url [markdown-file]")
+	fmt.Println("Usage: issue2md [--enable-reactions] issue-url [markdown-file]")
 	fmt.Println("Arguments:")
-	fmt.Println("  issue-url      The URL of the github issue to convert.")
-	fmt.Println("  markdown-file  (optional) The output markdown file.")
+	fmt.Println("  --enable-reactions  (optional) Include reactions in the output.")
+	fmt.Println("  issue-url           The URL of the GitHub issue to convert.")
+	fmt.Println("  markdown-file       (optional) The output markdown file.")
 }
 
 func main() {
-	if len(os.Args) < 2 {
+	enableReactions := false
+	args := os.Args[1:]
+	// Check for --enable-reactions flag
+	for i, arg := range args {
+		if arg == "--enable-reactions" {
+			enableReactions = true
+			// Remove the flag from args
+			args = append(args[:i], args[i+1:]...)
+			break
+		}
+	}
+
+	if len(args) < 1 {
 		fmt.Println("Error: issue-url is required.")
 		usage()
 		return
 	}
 
-	issueURL := os.Args[1]
+	issueURL := args[0]
 	var markdownFile string
-	if len(os.Args) >= 3 {
-		markdownFile = os.Args[2]
+	if len(args) >= 2 {
+		markdownFile = args[1]
 	}
 
 	owner, repo, issueNumber, issueType, err := github.ParseURL(issueURL)
@@ -46,7 +59,7 @@ func main() {
 			return
 		}
 
-		comments, err := github.FetchComments(owner, repo, issueNumber, token)
+		comments, err := github.FetchComments(owner, repo, issueNumber, token, enableReactions)
 		if err != nil {
 			fmt.Printf("Error fetching comments: %v\n", err)
 			return
@@ -60,7 +73,7 @@ func main() {
 			return
 		}
 
-		discussionComments, err := github.FetchDiscussionComments(owner, repo, issueNumber, token)
+		discussionComments, err := github.FetchDiscussionComments(owner, repo, issueNumber, token, enableReactions)
 		if err != nil {
 			fmt.Printf("Error fetching discussion comments: %v\n", err)
 			return
