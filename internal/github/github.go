@@ -279,7 +279,7 @@ func FetchDiscussionComments(owner, repo string, discussionNumber int, token str
 			for i := range currentComments {
 				reactions, err := FetchReactionsForComment(owner, repo, currentComments[i].ID, token)
 				if err != nil {
-					return nil, fmt.Errorf("failed to fetch reactions for comment %d in %s/%s issue %d: %v. Ensure you have set a valid GITHUB_TOKEN", currentComments[i].ID, owner, repo, issueNumber, err)
+					return nil, fmt.Errorf("failed to fetch reactions for comment %d in %s/%s discussion %d: %v. Ensure you have set a valid GITHUB_TOKEN", currentComments[i].ID, owner, repo, discussionNumber, err)
 				}
 				currentComments[i].Reactions = reactions
 			}
