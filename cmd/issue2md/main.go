@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -9,27 +10,22 @@ import (
 	"github.com/bigwhite/issue2md/internal/github"
 )
 
+var enableReactions = flag.Bool("enable-reactions", false, "Include reactions in the output.")
+
 func usage() {
-	fmt.Println("Usage: issue2md [--enable-reactions] issue-url [markdown-file]")
-	fmt.Println("Arguments:")
-	fmt.Println("  --enable-reactions  (optional) Include reactions in the output.")
-	fmt.Println("  issue-url           The URL of the GitHub issue to convert.")
-	fmt.Println("  markdown-file       (optional) The output markdown file.")
+	fmt.Fprintf(os.Stderr, "Usage: issue2md [flags] issue-url [markdown-file]\n")
+	fmt.Fprintf(os.Stderr, "Arguments:\n")
+	fmt.Fprintf(os.Stderr, "  issue-url           The URL of the GitHub issue to convert.\n")
+	fmt.Fprintf(os.Stderr, "  markdown-file       (optional) The output markdown file.\n")
+	fmt.Fprintf(os.Stderr, "Flags:\n")
+	flag.PrintDefaults()
 }
 
 func main() {
-	enableReactions := false
-	args := os.Args[1:]
-	// Check for --enable-reactions flag
-	for i, arg := range args {
-		if arg == "--enable-reactions" {
-			enableReactions = true
-			// Remove the flag from args
-			args = append(args[:i], args[i+1:]...)
-			break
-		}
-	}
+	flag.Usage = usage
+	flag.Parse()
 
+	args := flag.Args()
 	if len(args) < 1 {
 		fmt.Println("Error: issue-url is required.")
 		usage()
@@ -59,7 +55,7 @@ func main() {
 			return
 		}
 
-		comments, err := github.FetchComments(owner, repo, issueNumber, token, enableReactions)
+		comments, err := github.FetchComments(owner, repo, issueNumber, token, *enableReactions)
 		if err != nil {
 			fmt.Printf("Error fetching comments: %v\n", err)
 			return
@@ -73,7 +69,7 @@ func main() {
 			return
 		}
 
-		discussionComments, err := github.FetchDiscussionComments(owner, repo, issueNumber, token, enableReactions)
+		discussionComments, err := github.FetchDiscussionComments(owner, repo, issueNumber, token, *enableReactions)
 		if err != nil {
 			fmt.Printf("Error fetching discussion comments: %v\n", err)
 			return
