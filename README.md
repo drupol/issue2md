@@ -17,10 +17,13 @@ $ go install github.com/bigwhite/issue2md/cmd/issue2md@latest
 ### Convert an Issue/Discussion to Markdown
 
 ```bash
-Usage: issue2md issue-url [markdown-file]
+Usage: issue2md [flags] issue-url [markdown-file]
 Arguments:
   issue-url      The URL of the GitHub issue/discussion to convert.
   markdown-file  (optional) The output markdown file.
+Flags:
+  -enable-reactions
+    	Include reactions in the output.
 ```
 
 ## Web Mode

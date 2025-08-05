@@ -15,10 +15,13 @@ $ go install github.com/bigwhite/issue2md/cmd/issue2md@latest
 ### 将issue转换为Markdown
 
 ```
-用法：issue2md issue-url [markdown-file]
-参数：
+用法: issue2md [flags] issue-url [markdown-file]
+参数:
   issue-url      要转换的GitHub issue的URL。
-  markdown-file  （可选）输出的Markdown文件。
+  markdown-file  (可选) 输出的Markdown文件。
+标志:
+  -enable-reactions
+    	在输出中包含reactgions。
 ```
 
 ## 网页模式
